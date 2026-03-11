@@ -12,6 +12,9 @@ const SAMPLE_DATA = {
   competitors: "Microsoft, local software companies, freelance developers"
 };
 
+// ضعي مفتاح Gemini هنا بس
+const GEMINI_API_KEY = "AIzaSyChyvltnJGlssF4lodbf5UZ01hZlOH1n-c";
+
 function CharCount({ value, max }) {
   const pct = value.length / max;
   const color = pct > 0.9 ? "#ef4444" : pct > 0.7 ? "#f59e0b" : "#64748b";
@@ -22,7 +25,7 @@ function CharCount({ value, max }) {
   );
 }
 
-function Input({ label, id, type = "text", value, onChange, placeholder, required }) {
+function Input({ label, type = "text", value, onChange, placeholder, required }) {
   return (
     <div style={{ marginBottom: 20 }}>
       <label style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: 13, color: "#94a3b8", letterSpacing: "0.05em", textTransform: "uppercase" }}>
@@ -98,21 +101,6 @@ function Spinner() {
   );
 }
 
-function ReportCard({ title, icon, children }) {
-  return (
-    <div style={{
-      background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 16, padding: "24px 28px", marginBottom: 20
-    }}>
-      <h3 style={{ color: "#f59e0b", fontSize: 16, fontWeight: 700, marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
-        <span>{icon}</span> {title}
-      </h3>
-      <div style={{ color: "#cbd5e1", fontSize: 14, lineHeight: 1.8 }}
-        dangerouslySetInnerHTML={{ __html: children }} />
-    </div>
-  );
-}
-
 export default function App() {
   const [form, setForm] = useState({ companyName: "", industry: "", revenue: "", employees: "", challenges: "", goals: "", competitors: "" });
   const [loading, setLoading] = useState(false);
@@ -120,7 +108,6 @@ export default function App() {
   const [error, setError] = useState("");
 
   const set = key => val => setForm(f => ({ ...f, [key]: val }));
-
   const loadSample = () => setForm(SAMPLE_DATA);
 
   const analyze = async () => {
@@ -132,7 +119,7 @@ export default function App() {
       const prompt = `You are an elite business strategy consultant. Analyze the following business and return a JSON object ONLY (no markdown, no explanation, just raw JSON) with these exact keys:
 
 {
-  "executiveSummary": "3-sentence HTML paragraph",
+  "executiveSummary": "3-sentence paragraph as plain text",
   "swot": {
     "strengths": ["item1", "item2", "item3"],
     "weaknesses": ["item1", "item2", "item3"],
@@ -152,9 +139,9 @@ export default function App() {
     {"level": "Low", "risk": "...", "mitigation": "..."}
   ],
   "actionPlan": [
-    {"period": "Days 1–30", "focus": "...", "actions": ["...", "...", "..."]},
-    {"period": "Days 31–60", "focus": "...", "actions": ["...", "...", "..."]},
-    {"period": "Days 61–90", "focus": "...", "actions": ["...", "...", "..."]}
+    {"period": "Days 1-30", "focus": "...", "actions": ["...", "...", "..."]},
+    {"period": "Days 31-60", "focus": "...", "actions": ["...", "...", "..."]},
+    {"period": "Days 61-90", "focus": "...", "actions": ["...", "...", "..."]}
   ],
   "kpis": ["KPI 1: ...", "KPI 2: ...", "KPI 3: ...", "KPI 4: ...", "KPI 5: ..."]
 }
@@ -168,23 +155,24 @@ Business Data:
 - Goals: ${form.goals}
 - Competitors: ${form.competitors}`;
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 2000,
-          messages: [{ role: "user", content: prompt }]
-        })
-      });
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          })
+        }
+      );
 
       const data = await res.json();
-      const text = data.content.map(b => b.text || "").join("");
+      const text = data.candidates[0].content.parts[0].text;
       const clean = text.replace(/```json|```/g, "").trim();
       const parsed = JSON.parse(clean);
       setReport(parsed);
     } catch (e) {
-      setError("Something went wrong. Please try again.");
+      setError("Something went wrong. Please check your API key and try again.");
     } finally {
       setLoading(false);
     }
@@ -196,10 +184,9 @@ Business Data:
     <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #0a0f1e 0%, #0f172a 50%, #0a0f1e 100%)", fontFamily: "'DM Sans', 'Segoe UI', sans-serif", padding: "40px 20px" }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
 
-      {/* Header */}
       <div style={{ textAlign: "center", marginBottom: 48 }}>
         <div style={{ display: "inline-block", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 100, padding: "6px 18px", fontSize: 12, color: "#f59e0b", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 20 }}>
-          ✦ Powered by Claude AI
+          ✦ Powered by Gemini AI
         </div>
         <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontFamily: "'DM Serif Display', serif", color: "#f1f5f9", lineHeight: 1.15, marginBottom: 14 }}>
           AI Business<br /><span style={{ color: "#f59e0b" }}>Analyzer</span>
@@ -210,8 +197,7 @@ Business Data:
       </div>
 
       <div style={{ maxWidth: 860, margin: "0 auto" }}>
-        {/* Form Card */}
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 24, padding: "36px 40px", marginBottom: 24, backdropFilter: "blur(12px)" }}>
+        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 24, padding: "36px 40px", marginBottom: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
             <h2 style={{ color: "#f1f5f9", fontSize: 18, fontWeight: 700 }}>Business Information</h2>
             <button onClick={loadSample} style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 8, padding: "8px 16px", color: "#f59e0b", fontSize: 13, cursor: "pointer", fontWeight: 600 }}>
@@ -239,16 +225,14 @@ Business Data:
             style={{
               width: "100%", padding: "16px", background: loading ? "rgba(245,158,11,0.3)" : "linear-gradient(135deg, #f59e0b, #d97706)",
               border: "none", borderRadius: 12, color: loading ? "#94a3b8" : "#0a0f1e", fontSize: 16, fontWeight: 700,
-              cursor: loading ? "not-allowed" : "pointer", transition: "all 0.2s", letterSpacing: "0.02em"
+              cursor: loading ? "not-allowed" : "pointer", transition: "all 0.2s"
             }}>
             {loading ? "⏳ Generating Analysis..." : "🚀 Generate AI Analysis"}
           </button>
         </div>
 
-        {/* Loading */}
         {loading && <Spinner />}
 
-        {/* Report */}
         {report && (
           <div>
             <div style={{ textAlign: "center", marginBottom: 32 }}>
@@ -258,9 +242,10 @@ Business Data:
             </div>
 
             {/* Executive Summary */}
-            <ReportCard title="Executive Summary" icon="📋">
-              {report.executiveSummary}
-            </ReportCard>
+            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "24px 28px", marginBottom: 20 }}>
+              <h3 style={{ color: "#f59e0b", fontSize: 16, fontWeight: 700, marginBottom: 16 }}>📋 Executive Summary</h3>
+              <p style={{ color: "#cbd5e1", fontSize: 14, lineHeight: 1.8 }}>{report.executiveSummary}</p>
+            </div>
 
             {/* SWOT */}
             <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "24px 28px", marginBottom: 20 }}>
@@ -273,7 +258,7 @@ Business Data:
                   { key: "threats", label: "Threats", color: "#f59e0b", bg: "rgba(245,158,11,0.05)" },
                 ].map(({ key, label, color, bg }) => (
                   <div key={key} style={{ background: bg, border: `1px solid ${color}30`, borderRadius: 12, padding: 16 }}>
-                    <div style={{ color, fontWeight: 700, fontSize: 13, marginBottom: 12, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
+                    <div style={{ color, fontWeight: 700, fontSize: 13, marginBottom: 12, textTransform: "uppercase" }}>{label}</div>
                     {(report.swot[key] || []).map((item, i) => (
                       <div key={i} style={{ color: "#cbd5e1", fontSize: 13, lineHeight: 1.6, marginBottom: 8, paddingLeft: 12, borderLeft: `2px solid ${color}40` }}>
                         {item}
