@@ -13,7 +13,7 @@ const SAMPLE_DATA = {
 };
 
 // ضعي مفتاح Gemini هنا بس
-const GEMINI_API_KEY = "AIzaSyChyvltnJGlssF4lodbf5UZ01hZlOH1n-c";
+const GEMINI_API_KEY = process.env.REACT_APP_GEMINI;
 
 function CharCount({ value, max }) {
   const pct = value.length / max;
