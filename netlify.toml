@@ -1,4 +1,4 @@
 [build]
   base = "ai-business-app"
   command = "npm run build"
-  publish = "ai-business-app/build"
+  publish = "build"
