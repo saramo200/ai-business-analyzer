@@ -13,7 +13,7 @@ const SAMPLE_DATA = {
 };
 
 // ضعي مفتاح Gemini هنا بس
-const AIzaSyANYJIq33u7jx3z5IGBP87f1Ao9G24Z5h4 = process.env.REACT_APP_GEMINI;
+const AIzaSyANYJIq33u7jx3z5IGBP87f1Ao9G24Z5h4 = process.env.REACT_APP_GEMINI_KEY;
 
 function CharCount({ value, max }) {
   const pct = value.length / max;
@@ -156,7 +156,7 @@ Business Data:
 - Competitors: ${form.competitors}`;
 
       const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.REACT_APP_GEMINI_KEY}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
