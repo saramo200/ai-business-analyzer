@@ -12,8 +12,7 @@ const SAMPLE_DATA = {
   competitors: "Microsoft, local software companies, freelance developers"
 };
 
-// ضعي مفتاح Gemini هنا بس
-const GEMINI_API_KEY = GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_KEY;
 
 function CharCount({ value, max }) {
   const pct = value.length / max;
